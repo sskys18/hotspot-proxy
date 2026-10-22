@@ -6,6 +6,7 @@ struct SettingsView: View {
     @AppStorage("hasOnboarded") private var hasOnboarded = false
     @State private var portText = ""
     @FocusState private var portFocused: Bool
+    @State private var confirmRegenerate = false
 
     private var version: String {
         let info = Bundle.main.infoDictionary
@@ -45,11 +46,31 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    CopyableRow(title: "Username", value: ProxyAuth.username)
+                    if let password = m.password {
+                        CopyableRow(title: "Password", value: password, secret: true)
+                    }
+                    Button("New Password", role: .destructive) { confirmRegenerate = true }
+                        .disabled(m.running)
+                } header: {
+                    Text("Authentication")
+                } footer: {
+                    Text(m.running
+                         ? "Stop the proxy to change the password."
+                         : "Every device must use this username and password. Copied passwords clear from the clipboard after 2 minutes.")
+                }
+                .confirmationDialog("Replace the password?", isPresented: $confirmRegenerate, titleVisibility: .visible) {
+                    Button("New Password", role: .destructive) { m.regeneratePassword() }
+                } message: {
+                    Text("Connected devices and the Mac auto-connect stop working until they get the new password.")
+                }
+
+                Section {
                     if m.addresses.isEmpty {
                         Text("No active network interfaces").foregroundStyle(.secondary)
                     }
-                    ForEach(m.addresses, id: \.0) { a in
-                        CopyableRow(title: a.0.hasPrefix("bridge") ? "\(a.0) · Hotspot" : a.0, value: a.1)
+                    ForEach(Array(m.addresses.enumerated()), id: \.offset) { _, a in
+                        CopyableRow(title: a.isHotspot ? "\(a.interface) · Hotspot" : a.interface, value: a.text)
                     }
                 } header: {
                     Text("Network Interfaces")

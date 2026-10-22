@@ -1,0 +1,10 @@
+// Signing identity. Defaults are placeholders so nothing personal is committed.
+// Put your own values in Config/Signing.local.xcconfig (git-ignored), for example:
+//
+//   DEVELOPMENT_TEAM = ABCDE12345
+//   BUNDLE_ID_PREFIX = com.yourname
+//
+// BUNDLE_ID_PREFIX also names the App Group (group.<prefix>.hotspotproxy) and the Keychain service.
+BUNDLE_ID_PREFIX = com.example
+
+#include? "Signing.local.xcconfig"

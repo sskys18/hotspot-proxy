@@ -24,10 +24,12 @@
 		CC1891077B0C495F98DCDC2C /* HotspotProxyWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 4FFB0C064BC5DC0E82C76A0F /* HotspotProxyWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		CE318B6B45B4940DD1A0395F /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A64CB9A5259D4531969FFF99 /* MainView.swift */; };
 		D892D5D1F18F71C2A94945DB /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 174E27382801AFBCE50C0184 /* OnboardingView.swift */; };
+		E34F68C95BF6D0608EBD18D8 /* Credentials.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47FDFD214C19065977338097 /* Credentials.swift */; };
 		E9F4D3D42D539B1043821B87 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A43A3F1C4224922B36DF7D20 /* Assets.xcassets */; };
 		EA1BFCFD08B7579BAE4F121E /* ProxySnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 685249830A47FFC8CF96F391 /* ProxySnapshot.swift */; };
 		ED7AE74822802B0C625D0E1B /* StatusStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FB4878093BCC8426A1703FA /* StatusStyle.swift */; };
 		F3E1039C005985388D64C3C2 /* StatusStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FB4878093BCC8426A1703FA /* StatusStyle.swift */; };
+		F55A0190678DEF21153D0915 /* Hotspot.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6CBD8FC08E5E2835FACCE13 /* Hotspot.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -63,6 +65,7 @@
 		348F0D871998B1CDD69F7AEA /* HotspotProxy.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = HotspotProxy.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		41E29580C30F8C16E47CEC22 /* HotspotProxyWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotspotProxyWidget.swift; sourceTree = "<group>"; };
 		44D833C839115F331F46F629 /* GuideViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuideViews.swift; sourceTree = "<group>"; };
+		47FDFD214C19065977338097 /* Credentials.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Credentials.swift; sourceTree = "<group>"; };
 		4FFB0C064BC5DC0E82C76A0F /* HotspotProxyWidget.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = HotspotProxyWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		5FAFA8CB89F9CE31CDF5E2F7 /* Tokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tokens.swift; sourceTree = "<group>"; };
 		5FDCD660594639D3D9F882EA /* Colors.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Colors.xcassets; sourceTree = "<group>"; };
@@ -72,6 +75,8 @@
 		9CCAA0E4CE1CD5C5BD23C24D /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		A43A3F1C4224922B36DF7D20 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A64CB9A5259D4531969FFF99 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
+		A6CBD8FC08E5E2835FACCE13 /* Hotspot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Hotspot.swift; sourceTree = "<group>"; };
+		C189793B18B9D96C22739581 /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
 		CFAA0DBC0F34FCFA39BE48F3 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
 		D422803A94436C3FB9843B3C /* ProxyServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxyServer.swift; sourceTree = "<group>"; };
 		D4AEFEE192E4A48C068D10C3 /* KeepAlive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeepAlive.swift; sourceTree = "<group>"; };
@@ -90,6 +95,7 @@
 		205C77166BC1AA903C012EC9 = {
 			isa = PBXGroup;
 			children = (
+				DD24E5DE1485FF7004BB8203 /* Config */,
 				066FA1BFF7F401459CB52E2F /* Resources */,
 				7574FDEA448E780C8E653565 /* Shared */,
 				34F095032473ED9BA3CBF4CE /* Sources */,
@@ -111,6 +117,7 @@
 			isa = PBXGroup;
 			children = (
 				1D59CA69A7B44C7EB24E92CB /* App.swift */,
+				A6CBD8FC08E5E2835FACCE13 /* Hotspot.swift */,
 				15E672D68B40DFAA7219AA39 /* Info.plist */,
 				D4AEFEE192E4A48C068D10C3 /* KeepAlive.swift */,
 				D422803A94436C3FB9843B3C /* ProxyServer.swift */,
@@ -135,6 +142,7 @@
 		97E934FBC9FCA4CB67FDB7FA /* Model */ = {
 			isa = PBXGroup;
 			children = (
+				47FDFD214C19065977338097 /* Credentials.swift */,
 				7BF04672F9BAF3B599B4E380 /* ProxyModel.swift */,
 			);
 			path = Model;
@@ -157,6 +165,14 @@
 				F25F709F72F48297DD484188 /* WidgetViews.swift */,
 			);
 			path = Widget;
+			sourceTree = "<group>";
+		};
+		DD24E5DE1485FF7004BB8203 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				C189793B18B9D96C22739581 /* Signing.xcconfig */,
+			);
+			path = Config;
 			sourceTree = "<group>";
 		};
 		EF2C514C13B9EC0DD335CC36 /* Views */ = {
@@ -221,11 +237,9 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					46170FD03D9E833E5A3AD3C0 = {
-						DevelopmentTeam = 5DUM8WPB4C;
 						ProvisioningStyle = Automatic;
 					};
 					B286AFD794504CA2BB22659A = {
-						DevelopmentTeam = 5DUM8WPB4C;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -288,7 +302,9 @@
 			files = (
 				4110A5E873CE4424DAD67496 /* App.swift in Sources */,
 				395EEFE53D743230CEC32027 /* Components.swift in Sources */,
+				E34F68C95BF6D0608EBD18D8 /* Credentials.swift in Sources */,
 				55E04E0DFD02E54DC56B88FE /* GuideViews.swift in Sources */,
+				F55A0190678DEF21153D0915 /* Hotspot.swift in Sources */,
 				9B4697370E66C5919B714114 /* KeepAlive.swift in Sources */,
 				CE318B6B45B4940DD1A0395F /* MainView.swift in Sources */,
 				D892D5D1F18F71C2A94945DB /* OnboardingView.swift in Sources */,
@@ -326,7 +342,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.indoyoon.hotspotproxy.widget;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_ID_PREFIX).hotspotproxy.widget";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -346,7 +362,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.indoyoon.hotspotproxy.widget;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_ID_PREFIX).hotspotproxy.widget";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -366,7 +382,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.indoyoon.hotspotproxy;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_ID_PREFIX).hotspotproxy";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -374,6 +390,7 @@
 		};
 		6B1846A23475123DF5F3D825 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = C189793B18B9D96C22739581 /* Signing.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -409,7 +426,6 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 2;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = 5DUM8WPB4C;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -453,7 +469,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.indoyoon.hotspotproxy;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_ID_PREFIX).hotspotproxy";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -461,6 +477,7 @@
 		};
 		E4C64D6DD8928B80CDBF4DBA /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = C189793B18B9D96C22739581 /* Signing.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -496,7 +513,6 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 2;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = 5DUM8WPB4C;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;

@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import UniformTypeIdentifiers
 
 struct SignalRing: View {
     let status: ProxySnapshot.Status
@@ -88,7 +89,7 @@ struct StatusHero: View {
                     .font(.largeTitle.weight(.semibold))
                     .monospacedDigit()
                     .lineLimit(1)
-                    .minimumScaleFactor(0.5)
+                    .minimumScaleFactor(0.3)
                     .textSelection(.enabled)
                     .accessibilityLabel("Proxy address \(endpoint.replacingOccurrences(of: ":", with: " port "))")
                 Text("Enter this as the proxy server on other devices")
@@ -222,19 +223,34 @@ struct StatTile<Value: View>: View {
 struct CopyableRow: View {
     let title: String
     let value: String
+    /// Masks the value until revealed and expires the copied text from the clipboard after 2 minutes.
+    var secret = false
     @State private var copied = false
+    @State private var revealed = false
 
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text(title).font(.subheadline).foregroundStyle(.secondary)
-                Text(value)
+                Text(secret && !revealed ? String(repeating: "•", count: 12) : value)
                     .font(.system(.body, design: .monospaced))
                     .textSelection(.enabled)
             }
             Spacer()
+            if secret {
+                Button { revealed.toggle() } label: {
+                    Image(systemName: revealed ? "eye.slash" : "eye").frame(width: 44, height: 44)
+                }
+                .buttonStyle(.borderless)
+                .accessibilityLabel(revealed ? "Hide \(title)" : "Show \(title)")
+            }
             Button {
-                UIPasteboard.general.string = value
+                if secret {
+                    UIPasteboard.general.setItems([[UTType.plainText.identifier: value]],
+                                                  options: [.expirationDate: Date().addingTimeInterval(120)])
+                } else {
+                    UIPasteboard.general.string = value
+                }
                 copied = true
                 Task { try? await Task.sleep(for: .seconds(1.5)); copied = false }
             } label: {

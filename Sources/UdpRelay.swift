@@ -3,11 +3,14 @@ import Network
 
 /// SOCKS5 UDP ASSOCIATE relay, listening on a UDP socket with the same port number as TCP.
 /// One destination NWConnection per client flow; flows idle for 60s are reaped (low power).
+/// Only clients with a live, authenticated UDP ASSOCIATE control connection (`isAllowed`) are relayed.
 final class UdpRelay {
     private let queue: DispatchQueue
     private var listener: NWListener?
     private var flows: [ObjectIdentifier: Flow] = [:]
     var onBytes: ((Int) -> Void)?
+    var isAllowed: ((NWEndpoint.Host) -> Bool)?
+    static let maxFlows = 64
 
     init(queue: DispatchQueue) { self.queue = queue }
 
@@ -27,8 +30,16 @@ final class UdpRelay {
         flows.removeAll()
     }
 
+    /// Closes every flow from `ip` once its last UDP ASSOCIATE control connection is gone.
+    func drop(_ ip: NWEndpoint.Host) {
+        flows.values.filter { $0.ip == ip }.forEach { $0.close() }
+    }
+
     private func accept(_ c: NWConnection) {
-        let f = Flow(inbound: c, queue: queue)
+        guard case .hostPort(let ip, _) = c.endpoint, isAllowed?(ip) == true, flows.count < Self.maxFlows else {
+            c.cancel(); return
+        }
+        let f = Flow(inbound: c, ip: ip, queue: queue)
         let id = ObjectIdentifier(f)
         flows[id] = f
         f.onBytes = { [weak self] n in self?.onBytes?(n) }
@@ -38,22 +49,41 @@ final class UdpRelay {
 
     final class Flow {
         let inbound: NWConnection
+        let ip: NWEndpoint.Host
         let queue: DispatchQueue
-        var outs: [String: NWConnection] = [:]
+        var outs: [String: Out] = [:]
         var lastActive = Date()
         var timer: DispatchSourceTimer?
         var closed = false
         var onBytes: ((Int) -> Void)?
         var onClose: (() -> Void)?
+        static let maxDestinations = 256
+        static let maxPending = 16
 
-        init(inbound: NWConnection, queue: DispatchQueue) { self.inbound = inbound; self.queue = queue }
+        /// Datagrams queue in `pending` until the resolved destination has passed `Destination` checks.
+        final class Out {
+            let conn: NWConnection
+            var ready = false
+            var pending: [Data] = []
+            init(_ conn: NWConnection) { self.conn = conn }
+        }
+
+        init(inbound: NWConnection, ip: NWEndpoint.Host, queue: DispatchQueue) { self.inbound = inbound; self.ip = ip; self.queue = queue }
 
         func start() {
+            var began = false
             inbound.stateUpdateHandler = { [weak self] s in
-                if case .failed = s { self?.close() }
+                guard let self else { return }
+                switch s {
+                case .ready:
+                    guard !began else { return }
+                    began = true
+                    if Hotspot.arrivedOnHotspot(self.inbound.currentPath?.localEndpoint) { self.receive() } else { self.close() }
+                case .failed: self.close()
+                default: break
+                }
             }
             inbound.start(queue: queue)
-            receive()
             let t = DispatchSource.makeTimerSource(queue: queue)
             t.schedule(deadline: .now() + 30, repeating: 30, leeway: .seconds(10))
             t.setEventHandler { [weak self] in
@@ -96,16 +126,37 @@ final class UdpRelay {
             lastActive = Date()
             onBytes?(payload.count)
             let key = header.base64EncodedString()
-            if let c = outs[key] { c.send(content: payload, completion: .idempotent); return }
-            guard let p = NWEndpoint.Port(rawValue: port) else { return }
-            let c = NWConnection(host: host, port: p, using: .udp)
-            outs[key] = c
-            c.stateUpdateHandler = { [weak self] s in
-                if case .failed = s { self?.outs[key]?.cancel(); self?.outs[key] = nil }
+            if let o = outs[key] {
+                if o.ready { o.conn.send(content: payload, completion: .idempotent) }
+                else if o.pending.count < Self.maxPending { o.pending.append(payload) }
+                return
             }
-            c.start(queue: queue)
-            c.send(content: payload, completion: .idempotent)
-            pump(c, header: header)
+            guard port != 0, let p = NWEndpoint.Port(rawValue: port), !Destination.isForbidden(host),
+                  let target = Destination.dialable(host), outs.count < Self.maxDestinations else { return }
+            let o = Out(NWConnection(host: target, port: p, using: .udp))
+            o.pending.append(payload)
+            outs[key] = o
+            o.conn.stateUpdateHandler = { [weak self, weak o] s in
+                guard let self, let o else { return }
+                switch s {
+                case .ready:
+                    guard !o.ready else { return }
+                    if Destination.isForbidden(resolved: o.conn.currentPath?.remoteEndpoint) { self.drop(key); return }
+                    o.ready = true
+                    o.pending.forEach { o.conn.send(content: $0, completion: .idempotent) }
+                    o.pending.removeAll()
+                    self.pump(o.conn, header: header)
+                case .failed: self.drop(key)
+                default: break
+                }
+            }
+            o.conn.start(queue: queue)
+        }
+
+        private func drop(_ key: String) {
+            outs[key]?.conn.stateUpdateHandler = nil
+            outs[key]?.conn.cancel()
+            outs[key] = nil
         }
 
         private func pump(_ c: NWConnection, header: Data) {
@@ -124,7 +175,7 @@ final class UdpRelay {
             if closed { return }
             closed = true
             timer?.cancel()
-            outs.values.forEach { $0.cancel() }
+            outs.values.forEach { $0.conn.stateUpdateHandler = nil; $0.conn.cancel() }
             outs.removeAll()
             inbound.cancel()
             onClose?()

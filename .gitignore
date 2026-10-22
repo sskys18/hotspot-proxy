@@ -6,3 +6,5 @@ xcuserdata/
 .omo/
 *.ipa
 *.dSYM.zip
+Config/Signing.local.xcconfig
+tmp/

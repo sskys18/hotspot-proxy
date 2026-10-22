@@ -18,8 +18,8 @@ struct ProxySnapshot: Codable, Equatable {
     var errorMessage: String?
     var updatedAt: Date
 
-    /// "IP:port" to enter on other devices; nil without a hotspot.
-    var endpoint: String? { hotspotIP.map { "\($0):\(port)" } }
+    /// "IP:port" ("[IPv6]:port") to enter on other devices; nil without a hotspot.
+    var endpoint: String? { hotspotIP.map { $0.contains(":") ? "[\($0)]:\(port)" : "\($0):\(port)" } }
 
     static let placeholder = ProxySnapshot(status: .running, hotspotIP: "172.20.10.1", port: 8080,
                                            connections: 3, bytes: 48_300_000, errorMessage: nil, updatedAt: .now)
@@ -28,7 +28,8 @@ struct ProxySnapshot: Codable, Equatable {
 }
 
 enum SharedStore {
-    static let appGroup = "group.com.indoyoon.hotspotproxy"
+    /// Set per build from BUNDLE_ID_PREFIX (Config/Signing.xcconfig) via the HotspotAppGroup Info.plist key.
+    static let appGroup = Bundle.main.object(forInfoDictionaryKey: "HotspotAppGroup") as! String
     static let widgetKind = "HotspotProxyStatus"
     private static let key = "snapshot.v1"
 

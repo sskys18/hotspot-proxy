@@ -1,5 +1,5 @@
+import Network
 import SwiftUI
-import Darwin
 import UIKit
 import WidgetKit
 
@@ -11,8 +11,10 @@ final class ProxyModel: ObservableObject {
     @Published var connections = 0
     @Published var bytes: UInt64 = 0
     @Published var error: String?
-    @Published var addresses: [(String, String)] = []
+    @Published var addresses: [Hotspot.InterfaceAddress] = []
     @Published var startedAt: Date?
+    /// Nil only when the Keychain failed; the proxy refuses to start without a password.
+    @Published private(set) var password: String?
 
     private let server = ProxyServer()
     private let keepAlive = KeepAlive()
@@ -35,20 +37,25 @@ final class ProxyModel: ObservableObject {
         }
         if args.contains("-uiDemoNoHotspot") {
             running = true; startedAt = .now.addingTimeInterval(-412)
-            addresses = [("pdp_ip0", "10.44.1.7")]
+            addresses = [Self.demo("pdp_ip0", "10.44.1.7")]
         } else if args.contains("-uiDemo") {
             running = true; connections = 3; bytes = 48_300_000
             startedAt = .now.addingTimeInterval(-3725)
-            addresses = [("bridge100", "172.20.10.1"), ("en0", "192.168.0.12"), ("pdp_ip0", "10.44.1.7")]
+            addresses = [Self.demo("bridge100", "172.20.10.1"), Self.demo("en0", "192.168.0.12"), Self.demo("pdp_ip0", "10.44.1.7")]
         } else {
+            do { password = try Credentials.loadOrCreate() } catch { self.error = "Could not load the proxy password: \(error)" }
             refreshAddresses()
             if autoStart { start() }
         }
         publishSnapshot()
     }
 
-    var hotspotIP: String? { addresses.first { $0.0.hasPrefix("bridge") }?.1 }
-    var endpoint: String? { hotspotIP.map { "\($0):\(port)" } }
+    var hotspotIP: String? { Hotspot.preferredAddress(addresses) }
+    var endpoint: String? { snapshot.endpoint }
+
+    private static func demo(_ interface: String, _ ip: String) -> Hotspot.InterfaceAddress {
+        Hotspot.InterfaceAddress(interface: interface, host: NWEndpoint.Host(ip), text: ip)
+    }
 
     var status: ProxySnapshot.Status {
         if error != nil { return .error }
@@ -76,9 +83,10 @@ final class ProxyModel: ObservableObject {
     }
 
     func start() {
-        error = nil
         if !demo {
-            server.start(port: UInt16(clamping: port))
+            guard let password else { publishSnapshot(); return }
+            error = nil
+            server.start(port: UInt16(clamping: port), auth: ProxyAuth(password: password))
             keepAlive.start()
         }
         running = true
@@ -97,6 +105,12 @@ final class ProxyModel: ObservableObject {
     }
 
     func toggle() { running ? stop() : start() }
+
+    /// New password; every connected device and the Mac must be updated afterwards.
+    func regeneratePassword() {
+        guard !running, !demo else { return }
+        do { password = try Credentials.regenerate(); error = nil } catch { self.error = "Could not save the proxy password: \(error)" }
+    }
 
     @discardableResult
     func setPort(_ value: Int) -> Bool {
@@ -134,18 +148,6 @@ final class ProxyModel: ObservableObject {
     }
 
     func refreshAddresses() {
-        var out: [(String, String)] = []
-        var ifap: UnsafeMutablePointer<ifaddrs>?
-        guard getifaddrs(&ifap) == 0, let first = ifap else { return }
-        defer { freeifaddrs(ifap) }
-        for p in sequence(first: first, next: { $0.pointee.ifa_next }) {
-            guard let sa = p.pointee.ifa_addr, sa.pointee.sa_family == UInt8(AF_INET) else { continue }
-            let name = String(cString: p.pointee.ifa_name)
-            guard name != "lo0" else { continue }
-            var host = [CChar](repeating: 0, count: Int(NI_MAXHOST))
-            getnameinfo(sa, socklen_t(sa.pointee.sa_len), &host, socklen_t(host.count), nil, 0, NI_NUMERICHOST)
-            out.append((name, String(cString: host)))
-        }
-        addresses = out.sorted { ($0.0.hasPrefix("bridge") ? 0 : 1) < ($1.0.hasPrefix("bridge") ? 0 : 1) }
+        addresses = Hotspot.addresses().sorted { ($0.isHotspot ? 0 : 1) < ($1.isHotspot ? 0 : 1) }
     }
 }
