@@ -10,7 +10,7 @@
         "inet4_range": "198.18.0.0/15"
       },
       {
-        "type": "tcp",
+        "type": "https",
         "tag": "remote",
         "server": "1.1.1.1",
         "detour": "proxy"
@@ -48,18 +48,21 @@
       "tag": "tun-in",
       "interface_name": "utun199",
       "address": [
-        "172.19.0.1/30"
+        "172.19.0.1/30",
+        "fdfe:dcba:9876::1/126"
       ],
       "mtu": 1500,
       "auto_route": true,
       "strict_route": false,
       "stack": "system",
       "route_exclude_address": [
+        "172.20.10.0/28",
         "100.64.0.0/10",
         "fd7a:115c:a1e0::/48",
         "10.0.0.0/8",
         "192.168.0.0/16",
-        "169.254.0.0/16"
+        "169.254.0.0/16",
+        "fe80::/10"
       ]
     }
   ],
@@ -67,9 +70,11 @@
     {
       "type": "socks",
       "tag": "proxy",
-      "server": "172.20.10.1",
+      "server": "__PHONE__",
       "server_port": 8080,
-      "version": "5"
+      "version": "5",
+      "username": "hotspot",
+      "password": "__PASSWORD__"
     },
     {
       "type": "direct",

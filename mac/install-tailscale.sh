@@ -8,11 +8,12 @@ osascript -e 'quit app "Tailscale"' 2>/dev/null || true
 pkill -x Tailscale 2>/dev/null || true
 pkill -x tailscaled 2>/dev/null || true
 sleep 2
+install -m 644 hotspot-lib.sh /usr/local/libexec/hotspot-lib.sh
 install -m 755 tailscaled-wrapper.sh /usr/local/libexec/tailscaled-wrapper.sh
 install -m 755 hotspot-tun.sh /usr/local/libexec/hotspot-tun.sh
-install -m 644 com.indo.tailscaled.plist /Library/LaunchDaemons/
-launchctl bootout system/com.indo.tailscaled 2>/dev/null || true
-launchctl bootstrap system /Library/LaunchDaemons/com.indo.tailscaled.plist
+install -m 644 local.hotspot-tun.tailscaled.plist /Library/LaunchDaemons/
+launchctl bootout system/local.hotspot-tun.tailscaled 2>/dev/null || true
+launchctl bootstrap system /Library/LaunchDaemons/local.hotspot-tun.tailscaled.plist
 sleep 5
 /opt/homebrew/bin/tailscale up 2>&1 | tail -2 || true
 /opt/homebrew/bin/tailscale status | head -3

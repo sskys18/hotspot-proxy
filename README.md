@@ -57,9 +57,18 @@ Some carriers and plans classify tethered hotspot traffic separately and throttl
 1. On the iPhone, turn on **Settings › Personal Hotspot › Allow Others to Join**.
 2. Open the app and tap **Start Proxy**. By default it starts automatically on launch.
 3. Join the hotspot from another device and set its proxy manually:
-   - Server: `172.20.10.1` (shown in the app)
+   - Server: the address shown in the app (`172.20.10.1` on IPv4 hotspots; on IPv6-only carrier hotspots an IPv6 link-local address such as `fe80::...`)
    - Port: `8080`
    - HTTP, HTTPS, and SOCKS5 all use the same port.
+   - Username `hotspot`, password from **Settings › Authentication** (generated on first launch, stored in the Keychain).
+
+### Security
+
+- Only connections that arrive on the Personal Hotspot interface (`bridge*`) are accepted, for both IPv4 (`172.20.10.0/28`) and IPv6-only hotspots, and every client must authenticate (SOCKS5 username/password, HTTP `Proxy-Authorization: Basic`).
+- The proxy refuses to reach any of the iPhone's own addresses, loopback, link-local and multicast, checked again on the resolved address.
+- UDP is relayed only while the client holds an authenticated SOCKS5 UDP ASSOCIATE connection.
+- Clients get 10 seconds to authenticate; sessions and UDP flows are capped.
+- `GET /hotspot-proxy/identify?n=<hex>` returns `HMAC-SHA256(password, "hotspot-proxy-identify:" + n)` without authentication, so the Mac can prove it reached its own phone before sending credentials.
 
 ### Mac: system-wide automatic proxy (optional)
 
@@ -67,12 +76,14 @@ The `mac/` directory has a launchd setup built on [sing-box](https://sing-box.sa
 
 ```bash
 brew install sing-box
-sudo bash mac/install.sh             # install (auto on/off on network changes)
+sudo bash mac/install.sh             # once; then starts at every login
 sudo bash mac/uninstall.sh           # remove
 sudo bash mac/install-tailscale.sh   # (optional) run Tailscale as a CLI daemon
 ```
 
-`hotspot-tun.sh` runs on every network change and every 30 seconds. When the Mac is on the iPhone hotspot (`172.20.10.x`) and `172.20.10.1:8080` responds, it turns the TUN and DNS on. Otherwise it restores the normal setup.
+`install.sh` asks for the app password once, stores it root-only (mode 600), and registers a user LaunchAgent. That agent starts at every login and reloads the root watcher if a reboot dropped it, so there is no command to run again. The watcher itself runs on every network change and every 30 seconds. It tries the IPv4 hotspot gateway `172.20.10.1` and the Wi-Fi IPv6 default router (IPv6-only carrier hotspots give clients no `172.20.10.x` address, only link-local plus CLAT). When one of them answers the identify challenge on port 8080 with the right HMAC, it first checks that the phone can actually reach the internet, then turns the TUN on, so joining a stranger's iPhone hotspot never routes traffic or credentials there. System DNS is left alone: lookups go to the hotspot's own resolver and the resulting connections enter the TUN by route. Otherwise the TUN stays off.
+
+Each run writes its result to `/var/run/hotspot-tun.json` (readable by any user), for example `{"state":"proxied","phone":"172.20.10.1","updated":1700000000}`. `state` is `proxied`, `upstream-failed` (on the hotspot, but the phone app cannot reach the internet, so the Mac stays direct), `route-failed` (the tunnel could not take traffic; retried after rejoining), or `off`. An `updated` older than about two minutes means the watcher has stopped. DockAwake shows this in its Network card.
 
 ## Background behavior and battery
 
@@ -89,7 +100,7 @@ open HotspotProxy.xcodeproj
 ```
 
 - The project has two targets: `HotspotProxy` (the app) and `HotspotProxyWidget` (the WidgetKit extension).
-- The targets share state through the App Group `group.com.indoyoon.hotspotproxy`. To build under your own team, change `DEVELOPMENT_TEAM`, the bundle IDs, and the App Group in `project.yml`.
+- Signing comes from `Config/Signing.xcconfig`, which commits only placeholders. Put your own `DEVELOPMENT_TEAM` and `BUNDLE_ID_PREFIX` in `Config/Signing.local.xcconfig` (git-ignored) and run `xcodegen generate`. The bundle IDs, the App Group `group.<prefix>.hotspotproxy` the targets share, and the Keychain service all derive from that prefix.
 - Icon sources are in `design/icon/*.svg`. The design system is in [`DESIGN.md`](DESIGN.md).
 
 ## Layout
